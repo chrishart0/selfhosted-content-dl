@@ -73,8 +73,10 @@ Ensure you are in the `backend` directory and your virtual environment is activa
 
 First, ensure the API is up or the integration tests will fail
 
+Note that pytest is configured automatically via `pytest.ini` and `backend/.coveragerc`
+
 ```
-pytest backend/tests/unit --cov=backend --cov-report term --cov-report=xml --cov-fail-under=80
+pytest 
 ```
 
 ## License

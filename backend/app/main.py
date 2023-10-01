@@ -119,7 +119,8 @@ async def initiate_download(download_request: DownloadRequest, background_tasks:
                 ys.download(output_path=os.path.dirname(absolute_file_path), filename=os.path.basename(absolute_file_path))
             elif service == 'vimeo':
                 vi_video = vimeo.new(download_request.url)
-                vi_video.download(filepath=absolute_file_path)
+                vi_best = vi_video.getbest()
+                vi_best.download(filepath=absolute_file_path, quiet=False)
         
         # Add the download task to the background tasks queue
         background_tasks.add_task(download_video)
