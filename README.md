@@ -67,19 +67,12 @@ The project contains unit tests to ensure everything is working as expected.
 
 Ensure you are in the `backend` directory and your virtual environment is activated.
 
-#### Run the unit tests:
-```
-# Ensure you are in the backend dir first
-pytest --cov=app --cov-fail-under=80
+#### Run the tests:
+
+First, ensure the API is up or the integration tests will fail
 
 ```
-
-#### Run the Integration tests:
-First, ensure the API is up
-```
-# Ensure you are in the backend dir first
-pytest backend/tests/integration/
-
+pytest backend/tests/unit --cov=backend --cov-report term --cov-report=xml --cov-fail-under=80
 ```
 
 ## License
