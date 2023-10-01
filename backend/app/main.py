@@ -10,6 +10,9 @@ app = FastAPI()
 # Set the root directory for downloads (This will be your default download path)
 ROOT_DIRECTORY = "./test-downloads"
 
+# Global dictionary to track download status. This is a simplification and not suitable for production.
+DOWNLOAD_STATUS = {}
+
 # Model for initiating a download
 class DownloadRequest(BaseModel):
     url: str  # The video URL
@@ -23,6 +26,10 @@ class Config(BaseModel):
     default_path: str
     preferred_format: str
 
+
+###############
+### Routes ####
+###############
 
 def determine_service(url: str) -> str:
     """
@@ -96,38 +103,44 @@ async def initiate_download(download_request: DownloadRequest, background_tasks:
         service = determine_service(download_request.url)
         
         # Determine the file path based on service name, channel, and file name
-        absolute_file_path = None
+        file_path = None
+        full_path = None
         if service == 'youtube':
             yt_video = YouTube(download_request.url)
             channel = yt_video.author  # This assumes the author is the channel name
             title = yt_video.title
-            absolute_file_path = f"{ROOT_DIRECTORY}/{service}/{channel}/{title}.mp4"
+            file_path = f"{service}/{channel}/{title}.mp4"
+            full_path = f"{ROOT_DIRECTORY}/{file_path}"
         elif service == 'vimeo':
             vi_video = vimeo.new(download_request.url)
             channel = getattr(vi_video, 'author_name', 'Unknown Channel')
             title = vi_video.title
-            absolute_file_path = f"{ROOT_DIRECTORY}/{service}/{channel}/{title}.mp4"
+            file_path = f"{service}/{channel}/{title}.mp4"
+            full_path = f"{ROOT_DIRECTORY}/{file_path}"
         
         # Create download directory if it doesn't exist
-        os.makedirs(os.path.dirname(absolute_file_path), exist_ok=True)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
         
         # Define a background task for downloading the video
         def download_video():
             if service == 'youtube':
                 yt_video = YouTube(download_request.url)
                 ys = yt_video.streams.get_highest_resolution()
-                ys.download(output_path=os.path.dirname(absolute_file_path), filename=os.path.basename(absolute_file_path))
+                ys.download(output_path=os.path.dirname(full_path), filename=os.path.basename(file_path))
             elif service == 'vimeo':
                 vi_video = vimeo.new(download_request.url)
                 vi_best = vi_video.getbest()
-                vi_best.download(filepath=absolute_file_path, quiet=False)
+                vi_best.download(filepath=full_path, quiet=False)
         
         # Add the download task to the background tasks queue
         background_tasks.add_task(download_video)
         
+        # Add initial status to the DOWNLOAD_STATUS dictionary
+        DOWNLOAD_STATUS[file_path] = {"status": "Downloading"}
+
         # For this example, we're returning the file path instead of a GUID.
         # In a real-world scenario, you might want to return a GUID and track download progress.
-        return {"file_path": absolute_file_path}
+        return {"file_path": file_path}
     
     except HTTPException as he:
         raise he  # re-raise the HTTPException directly
@@ -135,14 +148,19 @@ async def initiate_download(download_request: DownloadRequest, background_tasks:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
-@app.get("/download/status/{guid}")
-async def get_download_status(guid: str = Path(..., description="The unique GUID of the download task")):
+@app.get("/download/status/{file_path:path}")
+async def get_download_status(file_path: str = Path(..., description="The file path of the download task")):
     """
-    Retrieves the status of a video download using a GUID.
-    - Look up the status of the download task associated with the specified GUID.
-    - Return the download status, progress, and file path if completed.
+    Retrieves the status of a video download using the file path.
+    - Look up the status of the download task associated with the specified file path.
+    - Return the download status and file path if completed.
     """
-    pass
+    print("print DOWNLOAD_STATUS:", DOWNLOAD_STATUS)
+    print("print file_path:", file_path)
+    status_info = DOWNLOAD_STATUS.get(file_path, None)
+    if status_info is None:
+        raise HTTPException(status_code=404, detail=f" Download task not found")
+    return status_info
 
 
 @app.get("/downloads")
