@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, Query, Path, Body, HTTPException
 from pydantic import BaseModel
 from pytube import YouTube
@@ -6,6 +7,10 @@ import os
 from fastapi import BackgroundTasks
 
 app = FastAPI()
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Set the root directory for downloads (This will be your default download path)
 ROOT_DIRECTORY = "./test-downloads"
@@ -128,13 +133,16 @@ async def initiate_download(download_request: DownloadRequest, background_tasks:
                     yt_video = YouTube(download_request.url)
                     ys = yt_video.streams.get_highest_resolution()
                     ys.download(output_path=os.path.dirname(full_path), filename=os.path.basename(file_path))
+                    logger.info(f'Successfully downloaded YouTube video from {download_request.url}')
                 elif service == 'vimeo':
                     vi_video = vimeo.new(download_request.url)
                     vi_best = vi_video.getbest()
                     vi_best.download(filepath=full_path, quiet=False)
+                    logger.info(f'Successfully downloaded Vimeo video from {download_request.url}')
                 DOWNLOAD_STATUS[file_path] = {"status": "Completed", "file_path": file_path}
             except Exception as e:
                 DOWNLOAD_STATUS[file_path] = {"status": f"Failed: {str(e)}"}
+                logger.error(f'Failed to download video from {download_request.url}: {str(e)}', exc_info=True)
         
         # Add the download task to the background tasks queue
         background_tasks.add_task(download_video)
