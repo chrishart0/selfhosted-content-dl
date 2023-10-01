@@ -73,7 +73,7 @@ async def get_video_info(url: str = Query(..., description="The video URL")):
                 "thumbnail_url": getattr(vi_video, 'thumbnail', None),
             }
 
-        return video_info
+        return video_info 
 
     except HTTPException as he:
         raise he  # re-raise the HTTPException directly
