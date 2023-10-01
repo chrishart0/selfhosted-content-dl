@@ -5,4 +5,5 @@ pytube
 vimeo-dl
 pytest 
 httpx 
+flake8
 pytest-asyncio

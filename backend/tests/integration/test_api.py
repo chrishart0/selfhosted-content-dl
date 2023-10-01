@@ -1,0 +1,26 @@
+import httpx
+import pytest
+
+# Define the base URL of your FastAPI application
+BASE_URL = "http://localhost:8000"
+
+@pytest.mark.asyncio
+async def test_get_video_info():
+    async with httpx.AsyncClient() as client:
+        # Test with a valid YouTube URL
+        youtube_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        response = await client.get(f"{BASE_URL}/video/info?url={youtube_url}")
+        assert response.status_code == 200
+        assert response.json()['title'] == "Never Gonna Give You Up"
+
+        # Test with a valid Vimeo URL
+        vimeo_url = "https://vimeo.com/518118016"
+        response = await client.get(f"{BASE_URL}/video/info?url={vimeo_url}")
+        assert response.status_code == 200
+        assert response.json()['title'] == "MINECRAFT RICK ROLL!"
+
+        # Test with an invalid URL
+        invalid_url = "https://invalid.url"
+        response = await client.get(f"{BASE_URL}/video/info?url={invalid_url}")
+        assert response.status_code == 400
+
