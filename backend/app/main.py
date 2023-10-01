@@ -123,14 +123,18 @@ async def initiate_download(download_request: DownloadRequest, background_tasks:
         
         # Define a background task for downloading the video
         def download_video():
-            if service == 'youtube':
-                yt_video = YouTube(download_request.url)
-                ys = yt_video.streams.get_highest_resolution()
-                ys.download(output_path=os.path.dirname(full_path), filename=os.path.basename(file_path))
-            elif service == 'vimeo':
-                vi_video = vimeo.new(download_request.url)
-                vi_best = vi_video.getbest()
-                vi_best.download(filepath=full_path, quiet=False)
+            try:
+                if service == 'youtube':
+                    yt_video = YouTube(download_request.url)
+                    ys = yt_video.streams.get_highest_resolution()
+                    ys.download(output_path=os.path.dirname(full_path), filename=os.path.basename(file_path))
+                elif service == 'vimeo':
+                    vi_video = vimeo.new(download_request.url)
+                    vi_best = vi_video.getbest()
+                    vi_best.download(filepath=full_path, quiet=False)
+                DOWNLOAD_STATUS[file_path] = {"status": "Completed", "file_path": file_path}
+            except Exception as e:
+                DOWNLOAD_STATUS[file_path] = {"status": f"Failed: {str(e)}"}
         
         # Add the download task to the background tasks queue
         background_tasks.add_task(download_video)
