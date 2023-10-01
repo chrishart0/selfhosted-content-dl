@@ -1,4 +1,5 @@
 # Video Downloader API
+[![Backend Build and Test](https://github.com/chrishart0/selfhosted-content-dl/actions/workflows/python-api.yml/badge.svg)](https://github.com/chrishart0/selfhosted-content-dl/actions/workflows/python-api.yml)
 
 A FastAPI based application to download videos from YouTube and potentially other platforms in the future.
 
@@ -66,10 +67,18 @@ The project contains unit tests to ensure everything is working as expected.
 
 Ensure you are in the `backend` directory and your virtual environment is activated.
 
-Run the unit tests:
+#### Run the unit tests:
 ```
 # Ensure you are in the backend dir first
-pytest tests/unit
+pytest --cov=app --cov-fail-under=80
+
+```
+
+#### Run the Integration tests:
+First, ensure the API is up
+```
+# Ensure you are in the backend dir first
+pytest backend/tests/integration/
 
 ```
 

@@ -7,3 +7,4 @@ pytest
 httpx 
 flake8
 pytest-asyncio
+pytest-cov
