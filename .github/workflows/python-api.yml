@@ -42,7 +42,7 @@ jobs:
     
     - name: Run tests with pytest
       run: |
-        pytest backend/tests --cov-report term --cov-report=xml
+        pytest backend/tests --cov=backend --cov-report term --cov-report=xml --cov-fail-under=80
         
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
