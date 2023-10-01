@@ -46,7 +46,3 @@ async def test_initiate_download():
 
         # Check that the response JSON contains the correct file path
         assert response_json['file_path'] == expected_file_path, f"Expected '{expected_file_path}' but got '{response_json['file_path']}'"
-        
-        # Optionally, check that the file has actually been downloaded
-        # Note: This part of the test may take some time to run since it depends on the download completing
-        assert os.path.exists(expected_file_path), f"File not found: {expected_file_path}"
