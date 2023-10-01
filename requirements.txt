@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+pytube 
+vimeo-dl
+pytest 
+httpx 
+pytest-asyncio
