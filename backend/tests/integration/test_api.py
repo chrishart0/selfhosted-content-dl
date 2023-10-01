@@ -41,14 +41,9 @@ async def test_initiate_download():
         response_json = response.json()
         
         # Construct the expected file path
-        expected_file_path = os.path.join(
-            "test-downloads",
-            "youtube",
-            "Rick Astley",
-            "Never Gonna Give You Up.mp4"
-        )
         expected_file_path = f"./test-downloads/youtube/Rick Astley/Never Gonna Give You Up.mp4"
-        
+        print("response_json:", response_json)
+
         # Check that the response JSON contains the correct file path
         assert response_json['file_path'] == expected_file_path, f"Expected '{expected_file_path}' but got '{response_json['file_path']}'"
         
