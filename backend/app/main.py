@@ -2,6 +2,8 @@ from fastapi import FastAPI, Query, Path, Body, HTTPException
 from pydantic import BaseModel
 from pytube import YouTube
 import vimeo_dl as vimeo
+import os
+from fastapi import BackgroundTasks
 
 app = FastAPI()
 
@@ -10,9 +12,7 @@ ROOT_DIRECTORY = "./test-downloads"
 
 # Model for initiating a download
 class DownloadRequest(BaseModel):
-    url: str
-    service: str
-    filePath: str = None  # This will now be relative to ROOT_DIRECTORY
+    url: str  # The video URL
 
 # Model for managing downloads
 class ManageDownload(BaseModel):
@@ -81,19 +81,57 @@ async def get_video_info(url: str = Query(..., description="The video URL")):
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 @app.post("/download")
-async def initiate_download(download_request: DownloadRequest):
+async def initiate_download(download_request: DownloadRequest, background_tasks: BackgroundTasks):
     """
     Initiates a video download from a specified service.
     - Validate the URL and service.
     - Generate a unique GUID for this download task.
-    - If filePath is provided in download_request, it should be relative to ROOT_DIRECTORY.
+    - Automatically determine the file path based on service name, channel, and file name.
     - Queue the download task and initiate a background job for downloading the video.
     - Return the GUID for checking download status.
     """
 
-    # Construct the absolute file path by combining ROOT_DIRECTORY and download_request.filePath
-    absolute_file_path = f"{ROOT_DIRECTORY}/{download_request.filePath}" if download_request.filePath else None
-    pass
+    try:
+        # Determine the service
+        service = determine_service(download_request.url)
+        
+        # Determine the file path based on service name, channel, and file name
+        absolute_file_path = None
+        if service == 'youtube':
+            yt_video = YouTube(download_request.url)
+            channel = yt_video.author  # This assumes the author is the channel name
+            title = yt_video.title
+            absolute_file_path = f"{ROOT_DIRECTORY}/{service}/{channel}/{title}.mp4"
+        elif service == 'vimeo':
+            vi_video = vimeo.new(download_request.url)
+            channel = getattr(vi_video, 'author_name', 'Unknown Channel')
+            title = vi_video.title
+            absolute_file_path = f"{ROOT_DIRECTORY}/{service}/{channel}/{title}.mp4"
+        
+        # Create download directory if it doesn't exist
+        os.makedirs(os.path.dirname(absolute_file_path), exist_ok=True)
+        
+        # Define a background task for downloading the video
+        def download_video():
+            if service == 'youtube':
+                yt_video = YouTube(download_request.url)
+                ys = yt_video.streams.get_highest_resolution()
+                ys.download(output_path=os.path.dirname(absolute_file_path), filename=os.path.basename(absolute_file_path))
+            elif service == 'vimeo':
+                vi_video = vimeo.new(download_request.url)
+                vi_video.download(filepath=absolute_file_path)
+        
+        # Add the download task to the background tasks queue
+        background_tasks.add_task(download_video)
+        
+        # For this example, we're returning the file path instead of a GUID.
+        # In a real-world scenario, you might want to return a GUID and track download progress.
+        return {"file_path": absolute_file_path}
+    
+    except HTTPException as he:
+        raise he  # re-raise the HTTPException directly
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
 @app.get("/download/status/{guid}")

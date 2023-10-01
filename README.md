@@ -1,6 +1,8 @@
 # Video Downloader API
 [![Backend Build and Test](https://github.com/chrishart0/selfhosted-content-dl/actions/workflows/python-api.yml/badge.svg)](https://github.com/chrishart0/selfhosted-content-dl/actions/workflows/python-api.yml)
 
+[![codecov](https://codecov.io/gh/chrishart0/selfhosted-content-dl/graph/badge.svg?token=DP9BY1MTW7)](https://codecov.io/gh/chrishart0/selfhosted-content-dl)
+
 A FastAPI based application to download videos from YouTube and potentially other platforms in the future.
 
 ## Setup
